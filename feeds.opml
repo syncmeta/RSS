@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head>
+    <title>订阅清单</title>
+  </head>
+  <body>
+    <outline text="财新（需订阅账号）" title="财新（需订阅账号）">
+      <outline type="rss" text="财新 - 最新文章" title="财新 - 最新文章" xmlUrl="https://YOUR-RSSHUB-HOST/caixin/latest?fulltext=true&amp;key=YOUR_ACCESS_KEY"/>
+      <outline type="rss" text="财新 - 观点" title="财新 - 观点" xmlUrl="https://YOUR-RSSHUB-HOST/caixin/channel/opinion?fulltext=true&amp;key=YOUR_ACCESS_KEY"/>
+      <outline type="rss" text="财新 - 中国改革" title="财新 - 中国改革" xmlUrl="https://YOUR-RSSHUB-HOST/caixin/channel/cnreform?fulltext=true&amp;key=YOUR_ACCESS_KEY"/>
+      <outline type="rss" text="财新 - 比较" title="财新 - 比较" xmlUrl="https://YOUR-RSSHUB-HOST/caixin/channel/bijiao?fulltext=true&amp;key=YOUR_ACCESS_KEY"/>
+    </outline>
+    <outline text="纽约时报（需订阅账号）" title="纽约时报（需订阅账号）">
+      <outline type="rss" text="紐約時報 - 首頁（全文）" title="紐約時報 - 首頁（全文）" xmlUrl="https://YOUR-RSSHUB-HOST/nytimes/fulltext/homepage?key=YOUR_ACCESS_KEY"/>
+      <outline type="rss" text="紐約時報 - 雜誌（全文）" title="紐約時報 - 雜誌（全文）" xmlUrl="https://YOUR-RSSHUB-HOST/nytimes/fulltext/magazine?key=YOUR_ACCESS_KEY"/>
+      <outline type="rss" text="紐約時報 - The Upshot" title="紐約時報 - The Upshot" xmlUrl="https://YOUR-RSSHUB-HOST/nytimes/fulltext/theupshot?key=YOUR_ACCESS_KEY"/>
+      <outline type="rss" text="紐約時報 - DealBook" title="紐約時報 - DealBook" xmlUrl="https://YOUR-RSSHUB-HOST/nytimes/fulltext/dealbook?key=YOUR_ACCESS_KEY"/>
+      <outline type="rss" text="紐約時報 - 視覺調查" title="紐約時報 - 視覺調查" xmlUrl="https://YOUR-RSSHUB-HOST/nytimes/fulltext/visual-investigations?key=YOUR_ACCESS_KEY"/>
+      <outline type="rss" text="紐約時報 - 首頁" title="紐約時報 - 首頁" xmlUrl="https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml"/>
+      <outline type="rss" text="紐約時報 - 觀點" title="紐約時報 - 觀點" xmlUrl="https://rss.nytimes.com/services/xml/rss/nyt/Opinion.xml"/>
+      <outline type="rss" text="紐約時報 - 藝術" title="紐約時報 - 藝術" xmlUrl="https://rss.nytimes.com/services/xml/rss/nyt/Arts.xml"/>
+      <outline type="rss" text="紐約時報 - 雜誌" title="紐約時報 - 雜誌" xmlUrl="https://rss.nytimes.com/services/xml/rss/nyt/Magazine.xml"/>
+    </outline>
+    <outline text="中国地质大学（北京）" title="中国地质大学（北京）">
+      <outline type="rss" text="地大 - 北地新闻" title="地大 - 北地新闻" xmlUrl="https://YOUR-RSSHUB-HOST/cugb/news/bdxw?key=YOUR_ACCESS_KEY"/>
+      <outline type="rss" text="地大 - 教务处学生专区" title="地大 - 教务处学生专区" xmlUrl="https://YOUR-RSSHUB-HOST/cugb/jwc/xszq?key=YOUR_ACCESS_KEY"/>
+    </outline>
+    <outline text="X / Twitter" title="X / Twitter">
+      <outline type="rss" text="X / Andrej Karpathy" title="X / Andrej Karpathy" xmlUrl="https://YOUR-RSSHUB-HOST/twitter/user/karpathy?key=YOUR_ACCESS_KEY"/>
+      <outline type="rss" text="X / Andrew Ng" title="X / Andrew Ng" xmlUrl="https://YOUR-RSSHUB-HOST/twitter/user/AndrewYNg?key=YOUR_ACCESS_KEY"/>
+      <outline type="rss" text="X / Mark Gurman" title="X / Mark Gurman" xmlUrl="https://YOUR-RSSHUB-HOST/twitter/user/markgurman?key=YOUR_ACCESS_KEY"/>
+      <outline type="rss" text="X / Ming-Chi Kuo" title="X / Ming-Chi Kuo" xmlUrl="https://YOUR-RSSHUB-HOST/twitter/user/mingchikuo?key=YOUR_ACCESS_KEY"/>
+      <outline type="rss" text="X / Brian Krebs" title="X / Brian Krebs" xmlUrl="https://YOUR-RSSHUB-HOST/twitter/user/briankrebs?key=YOUR_ACCESS_KEY"/>
+      <outline type="rss" text="X / Laura Shin" title="X / Laura Shin" xmlUrl="https://YOUR-RSSHUB-HOST/twitter/user/laurashin?key=YOUR_ACCESS_KEY"/>
+    </outline>
+    <outline text="AI / 科技" title="AI / 科技">
+      <outline type="rss" text="Anthropic Research" title="Anthropic Research" xmlUrl="https://YOUR-RSSHUB-HOST/anthropic/research?key=YOUR_ACCESS_KEY"/>
+      <outline type="rss" text="即刻 - AI探索站" title="即刻 - AI探索站" xmlUrl="https://YOUR-RSSHUB-HOST/jike/topic/63579abb6724cc583b9bba9a?key=YOUR_ACCESS_KEY"/>
+      <outline type="rss" text="Latent Space" title="Latent Space" xmlUrl="https://www.latent.space/feed"/>
+      <outline type="rss" text="Ben&#x27;s Bites" title="Ben&#x27;s Bites" xmlUrl="https://www.bensbites.com/feed"/>
+      <outline type="rss" text="Founder Park" title="Founder Park" xmlUrl="https://wechat2rss.bestblogs.dev/feed/f940695505f2be1399d23cc98182297c"/>
+    </outline>
+    <outline text="评论 / 长文" title="评论 / 长文">
+      <outline type="rss" text="Sinocism" title="Sinocism" xmlUrl="https://sinocism.com/feed"/>
+      <outline type="rss" text="The Diff" title="The Diff" xmlUrl="https://www.thediff.co/feed"/>
+      <outline type="rss" text="Essays - Benedict Evans" title="Essays - Benedict Evans" xmlUrl="https://www.ben-evans.com/benedictevans?format=rss"/>
+      <outline type="rss" text="Works in Progress" title="Works in Progress" xmlUrl="https://www.worksinprogress.co/rss.xml"/>
+      <outline type="rss" text="Money Stuff" title="Money Stuff" xmlUrl="https://YOUR-NEWSLETTER-WORKER.workers.dev/feed/moneystuff.xml?token=YOUR_TOKEN"/>
+      <outline type="rss" text="Benedict&#x27;s Newsletter" title="Benedict&#x27;s Newsletter" xmlUrl="https://YOUR-NEWSLETTER-WORKER.workers.dev/feed/benedict.xml?token=YOUR_TOKEN"/>
+    </outline>
+    <outline text="论坛" title="论坛">
+      <outline type="rss" text="前沿快讯 - LINUX DO" title="前沿快讯 - LINUX DO" xmlUrl="https://linux.do/c/news/34.rss"/>
+    </outline>
+  </body>
+</opml>
