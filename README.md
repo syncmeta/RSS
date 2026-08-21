@@ -1,15 +1,12 @@
+> **暂时由 Claude 撰写，作者尚未过目。**
+
 # 订阅清单
 
-我自己在用的一份 RSS 订阅清单，连同每条订阅对应的 RSSHub 路由。
+我在用的 RSS 订阅，以及每条对应的 RSSHub 路由。
 
-整理出来是因为：好用的源不好找，而**找到之后最麻烦的一步往往是「这个站没有 RSS，怎么把它变成 RSS」**。
-这里把两件事都写下来了——订阅了什么，以及每一条是怎么来的。
+`feeds.opml` 可直接导入阅读器。指向自建服务的地址是占位符，换成你自己的实例；公开源是真实地址，导入即用。
 
-`feeds.opml` 可以直接导入阅读器。里面所有指向自建服务的地址都是占位符，
-换成你自己的实例地址即可；不需要自建的那些是公开地址，导进去就能用。
-
-> 清单里有几条需要**你自己的付费订阅账号**（财新、纽约时报）。
-> 这里只列路由，不提供任何账号或 cookie。
+财新、纽约时报需要你自己的订阅账号。这里只列路由，不含任何账号或 cookie。
 
 ## 清单
 
@@ -79,45 +76,31 @@
 
 | 名称 | 来源 | 路由 / 地址 | 说明 |
 |---|---|---|---|
-| 前沿快讯 - LINUX DO | 侧车抓取 | `https://linux.do/c/news/34.rss` | 站点按 TLS 指纹拦截，需用 curl 抓取后本地伺服 |
+| 前沿快讯 - LINUX DO | 侧车抓取 | <https://linux.do/c/news/34.rss> | 站点按 TLS 指纹拦截，需用 curl 抓取后本地伺服 |
 
-共 **33** 条。
+共 33 条。
 
-## 几类来源分别是什么意思
+## 来源类型
 
-- **RSSHub** —— 路由跑在自建的 [RSSHub](https://github.com/DIYgod/RSSHub) 实例上。
-  表里写的是路由路径，完整地址是 `https://<你的 RSSHub>/<路由>?key=<你的 ACCESS_KEY>`。
-  官方公共实例大多没有这些自写路由，也扛不住需要登录态的源。
-- **直连** —— 站点自己提供的 RSS，公开地址，拿来就能用。
-- **邮件转 RSS** —— 只发邮件不发 RSS 的 newsletter（比如彭博的 Money Stuff）。
-  做法是给它一个专用收件地址，收到信后转成 RSS 条目。我用的是一个 Cloudflare Worker，
-  几十行代码：Email Routing 收信 → 存 KV → 按 feed 输出 Atom。
-- **侧车抓取** —— 有些站（如 linux.do）在 Cloudflare 后面**按 TLS 指纹**拦截：
-  `curl` 能拿到，Node/Python 的 HTTP 客户端一律 403。做法是用一个只跑 `curl` 的小容器
-  定时抓下来落盘，再由 nginx 当静态文件伺服，阅读器去读那个本地地址。
+- **RSSHub** —— 跑在自建 [RSSHub](https://github.com/DIYgod/RSSHub) 上。完整地址是 `https://<你的 RSSHub>/<路由>?key=<你的 ACCESS_KEY>`。
+- **直连** —— 站点自己提供的 RSS。
+- **邮件转 RSS** —— 只发邮件的 newsletter。用一个 Cloudflare Worker 收信转 Atom：Email Routing 收信 → 存 KV → 按 feed 输出。
+- **侧车抓取** —— 有些站（如 linux.do）在 Cloudflare 后面按 TLS 指纹拦截，`curl` 能过、Node/Python 的 HTTP 客户端一律 403。用一个只跑 `curl` 的小容器定时抓下来落盘，再由 nginx 当静态文件伺服。
 
-## 自己写的 RSSHub 路由
+## 自写的 RSSHub 路由
 
-清单里有几条用的是官方 RSSHub 没有的路由，都是自己写的：
+官方 RSSHub 没有这几条：
 
 | 路由 | 做什么 |
 |---|---|
-| `/cugb/news/:channel`、`/cugb/jwc/:channel` | 中国地质大学（北京）的新闻和教务通知——学校官网没有任何 RSS |
-| `/nytimes/fulltext/:section` | 纽约时报付费全文。走 samizdat GraphQL 接口（开放 APQ），不需要跑浏览器 |
+| `/cugb/news/:channel`、`/cugb/jwc/:channel` | 中国地质大学（北京）的新闻和教务通知，学校官网没有 RSS |
+| `/nytimes/fulltext/:section` | 纽约时报付费全文，走 samizdat GraphQL（开放 APQ），不需要跑浏览器 |
 | `/caixin/channel/:column`、`/caixin/latest?fulltext=true` | 财新栏目页与付费全文 |
 
-这几条依赖你自己的订阅 cookie，通过环境变量传给 RSSHub。**本仓库不含任何 cookie。**
+依赖各自的订阅 cookie，通过环境变量传给 RSSHub。本仓库不含任何 cookie。
 
 ## 翻译
 
-英文源我用 [RSSBox](https://github.com/versun/rssbox)（原 RSS Translator）翻成繁体中文，
-输出格式是「译文 || 原文」对照。翻译模型用的是 Gemini 的 flash-lite 系列——
-这类活对模型要求不高，便宜的够用，但**一次要翻十几万字符的长文时有几个坑**，
-见 [notes.md](notes.md)。
+英文源用 [RSSBox](https://github.com/versun/rssbox) 翻成繁体中文，输出「译文 || 原文」对照，模型是 Gemini flash-lite。
 
-## 关于技术细节
-
-这个仓库只放清单。搭建过程中真正卡过我的几个问题——
-长文正文被解析库悄悄削掉三到五成、翻译成功但订阅地址一直返回空、
-Cloudflare 面板给出过期的隧道凭据——单独记在 [notes.md](notes.md) 里。
-都是实测结论，不是推断。
+RSSHub 和 RSSBox 的若干问题见 [notes.md](notes.md)。

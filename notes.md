@@ -1,10 +1,9 @@
+> **暂时由 Claude 撰写，作者尚未过目。**
+
 # RSSHub / RSSBox 踩过的坑
 
-这份清单里的订阅，大部分要靠 [RSSHub](https://github.com/DIYgod/RSSHub)（把网页变成 RSS）
-和 [RSSBox](https://github.com/versun/rssbox)（聚合与翻译）跑起来。下面几条是搭的过程中
-查了很久才弄明白的问题，文档里查不到。
-
-**每条都是实测结论，不是推断。**
+清单里的订阅大多跑在 [RSSHub](https://github.com/DIYgod/RSSHub) 和
+[RSSBox](https://github.com/versun/rssbox) 上。下面是搭的过程中遇到的问题，均为实测结论。
 
 ---
 
