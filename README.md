@@ -1,14 +1,8 @@
-> **暂时由 Claude 撰写，作者尚未过目。**
+# 我整理的一些 RSS
 
-# 订阅清单
+参考 RSSHub 官方文档配置好 Cookie，再参考本仓库的 feeds.opml，就得了。部分需要从邮件 Newsletter 转出来。
 
-我在用的 RSS 订阅，以及每条对应的 RSSHub 路由。
-
-`feeds.opml` 可直接导入阅读器。指向自建服务的地址是占位符，换成你自己的实例；公开源是真实地址，导入即用。
-
-财新、纽约时报需要你自己的订阅账号。这里只列路由，不含任何账号或 cookie。
-
-## 清单
+具体操作请让 Agent 处理，本仓库可以让 Agent 少绕一些弯路，因为这些路由都是摸索出来的。
 
 ### 财新（需订阅账号）
 
@@ -100,7 +94,5 @@
 依赖各自的订阅 cookie，通过环境变量传给 RSSHub。本仓库不含任何 cookie。
 
 ## 翻译
-
-英文源用 [RSSBox](https://github.com/versun/rssbox) 翻成繁体中文，输出「译文 || 原文」对照，模型是 Gemini flash-lite。
 
 RSSHub 和 RSSBox 的若干问题见 [notes.md](notes.md)。
