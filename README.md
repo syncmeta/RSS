@@ -59,7 +59,7 @@
 | 即刻 - AI探索站 | RSSHub | `/jike/topic/63579abb6724cc583b9bba9a` | 即刻圈子 |
 | Latent Space | 直连 | <https://www.latent.space/feed> | — |
 | Ben's Bites | 直连 | <https://www.bensbites.com/feed> | — |
-| Founder Park | 直连 | <https://wechat2rss.bestblogs.dev/feed/f940695505f2be1399d23…> | 微信公众号，经 wechat2rss 转 RSS |
+| Founder Park | 直连 | <https://wechat2rss.bestblogs.dev/feed/f940695505f2be1399d23cc98182297cadf6f90d.xml> | 微信公众号，经 wechat2rss 转 RSS |
 
 ### 评论 / 长文
 
