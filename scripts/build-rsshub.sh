@@ -10,7 +10,7 @@ git clone --no-checkout https://github.com/DIYgod/RSSHub.git "$build_dir"
 git -C "$build_dir" checkout --detach bc785f8157fbec6e6f9ec18ff76be7e6477511b7
 git -C "$build_dir" apply --check "$root/deploy/rsshub-custom-routes/fork-vs-upstream.patch"
 git -C "$build_dir" apply "$root/deploy/rsshub-custom-routes/fork-vs-upstream.patch"
-for route in caixin cugb nytimes; do
+for route in caixin nytimes; do
     mkdir -p "$build_dir/lib/routes/$route"
     cp -R "$root/deploy/rsshub-custom-routes/$route/." "$build_dir/lib/routes/$route/"
 done

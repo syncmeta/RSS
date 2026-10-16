@@ -27,13 +27,6 @@
 | 紐約時報 - 藝術 | 直连 | <https://rss.nytimes.com/services/xml/rss/nyt/Arts.xml> | 官方 RSS |
 | 紐約時報 - 雜誌 | 直连 | <https://rss.nytimes.com/services/xml/rss/nyt/Magazine.xml> | 官方 RSS |
 
-### 中国地质大学（北京）
-
-| 名称 | 来源 | 路由 / 地址 | 说明 |
-|---|---|---|---|
-| 地大 - 北地新闻 | RSSHub | `/cugb/news/bdxw` | 自写路由，学校官网没有 RSS |
-| 地大 - 教务处学生专区 | RSSHub | `/cugb/jwc/xszq` | 自写路由 |
-
 ### X / Twitter
 
 | 名称 | 来源 | 路由 / 地址 | 说明 |
@@ -72,7 +65,7 @@
 |---|---|---|---|
 | 前沿快讯 - LINUX DO | 侧车抓取 | <https://linux.do/c/news/34.rss> | 站点按 TLS 指纹拦截，需用 curl 抓取后本地伺服 |
 
-基础清单共 33 条。OPML 另附以下自建侧车：
+基础清单共 31 条。OPML 另附以下自建侧车：
 
 | 名称 | 自建输出 |
 | --- | --- |
@@ -97,7 +90,6 @@
 
 | 路由 | 做什么 |
 |---|---|
-| `/cugb/news/:channel`、`/cugb/jwc/:channel` | 中国地质大学（北京）的新闻和教务通知，学校官网没有 RSS |
 | `/nytimes/fulltext/:section` | 纽约时报付费全文，走 samizdat GraphQL（开放 APQ），不需要跑浏览器 |
 | `/caixin/channel/:column`、`/caixin/latest?fulltext=true` | 财新栏目页与付费全文 |
 

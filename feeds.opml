@@ -21,10 +21,6 @@
       <outline type="rss" text="紐約時報 - 藝術" title="紐約時報 - 藝術" xmlUrl="https://rss.nytimes.com/services/xml/rss/nyt/Arts.xml" />
       <outline type="rss" text="紐約時報 - 雜誌" title="紐約時報 - 雜誌" xmlUrl="https://rss.nytimes.com/services/xml/rss/nyt/Magazine.xml" />
     </outline>
-    <outline text="中国地质大学（北京）" title="中国地质大学（北京）">
-      <outline type="rss" text="地大 - 北地新闻" title="地大 - 北地新闻" xmlUrl="https://YOUR-RSSHUB-HOST/cugb/news/bdxw?key=YOUR_ACCESS_KEY" />
-      <outline type="rss" text="地大 - 教务处学生专区" title="地大 - 教务处学生专区" xmlUrl="https://YOUR-RSSHUB-HOST/cugb/jwc/xszq?key=YOUR_ACCESS_KEY" />
-    </outline>
     <outline text="X / Twitter" title="X / Twitter">
       <outline type="rss" text="X / Andrej Karpathy" title="X / Andrej Karpathy" xmlUrl="https://YOUR-RSSHUB-HOST/twitter/user/karpathy?key=YOUR_ACCESS_KEY" />
       <outline type="rss" text="X / Andrew Ng" title="X / Andrew Ng" xmlUrl="https://YOUR-RSSHUB-HOST/twitter/user/AndrewYNg?key=YOUR_ACCESS_KEY" />

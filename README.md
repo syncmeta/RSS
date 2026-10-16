@@ -1,6 +1,6 @@
 # RSS
 
-复制这句话给 Agent：
+快速开始 - 复制这段话给Agent来部署：
 
 ```text
 参考这个部署：https://github.com/syncmeta/RSS
@@ -12,13 +12,13 @@
 
 ## 订阅列表
 
-[参考订阅清单](subscriptions.md)按来源分类说明路由和用途；[feeds.opml](feeds.opml)提供 40 条参考订阅，包含官方源、RSSHub 路由、邮件 Newsletter 和自建全文侧车。
+[参考订阅清单](subscriptions.md)按来源分类说明路由和用途；[feeds.opml](feeds.opml)提供 38 条参考订阅，包含官方源、RSSHub 路由、邮件 Newsletter 和自建全文侧车。
 
 官方 RSS 可以直接使用。`YOUR-*` 是占位符，需要替换成自己的服务地址、访问密钥和邮件订阅令牌；付费来源使用自己的有效订阅账号。OPML 不包含作者的私人订阅地址。替换后可以导入阅读器，或用 [OPML 导入工具](deploy/rss-stack/import_opml.py)加入 RSSBox；默认预览，显式指定后才写入。
 
 ## 爬取
 
-- [RSSHub 自写路由](deploy/rsshub-custom-routes/)：财新、纽约时报、中国地质大学（北京）等来源；[构建脚本](scripts/build-rsshub.sh)把路由和补丁装进 RSSHub 镜像。
+- [RSSHub 自写路由](deploy/rsshub-custom-routes/)：财新、纽约时报等来源；[构建脚本](scripts/build-rsshub.sh)把路由和补丁装进 RSSHub 镜像。
 - [公共来源侧车](deploy/rss-stack/public-proxies/proxy.py)：Anthropic Research、X / Laura Shin。
 - [Anthropic News / Engineering](deploy/rss-stack/anthropic-sections/proxy.py)与 [Claude Blog](deploy/rss-stack/claude-blog/proxy.py)：独立抓取并输出 RSS。
 - [Sinocism](deploy/rss-stack/sinocism-proxy/proxy.py)与 [The Diff](deploy/rss-stack/thediff-proxy/proxy.py)：使用自己的会员 Cookie 获取全文。
