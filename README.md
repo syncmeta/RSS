@@ -1,5 +1,11 @@
 # RSS
 
+复制这句话给 Agent：
+
+```text
+参考这个部署：https://github.com/syncmeta/RSS
+```
+
 自用的一套RSS系统，包括[订阅列表](subscriptions.md)、[爬取](#爬取)、[翻译](#翻译)、[存储](#存储)、[补丁](#补丁)。
 
 可以按自己的来源和账号部署整套系统，也可以只取订阅清单、路由或某个模块使用。RSSHub、RSSBox、Redis、Nginx 通过源码构建或容器组合使用，本库提供自写路由、全文侧车、补丁及部署维护工具。
@@ -74,31 +80,6 @@ docker compose up -d
 | 可选适配器授权文件 | 运行本库适配器的显式授权流程，且账号和客户端须支持相应权限 | `deploy/rss-stack/chatgpt-plan-private/credentials.json` |
 
 Cookie 的具体字段、格式、获取步骤、失效更新，以及 `.env`、模型数据库、邮件令牌和备份的对应关系，见 [凭据配置说明](docs/credentials.md)。不要把真实 Cookie、密钥、带令牌的订阅链接发到 Issue、提交 Git 或贴进 Agent 对话；由自己在本地文件或服务管理界面填写。
-
-## 让 Agent 帮助部署
-
-复制下面的 prompt 给 Agent，并填写部署环境；无需在 prompt 中放真实凭据。完整可复制版本见 [Agent 部署 prompt](docs/agent-deploy.md)。
-
-```text
-请帮我部署 https://github.com/syncmeta/RSS 这套 RSS 系统。
-
-目标主机/操作系统/CPU 架构：<填写>
-部署目录：<填写，例如 /opt/rss>
-已有 RSS 服务或历史数据：<填写，没有则写无>
-需要的模块：<官方 RSS、RSSHub 路由、全文、翻译、邮件 Newsletter>
-需要的来源：<填写或从仓库参考清单选择>
-翻译服务/接口/模型：<填写；不需要则关闭，不提供真实 Key>
-访问方式与自己的域名：<仅本机 / SSH / HTTPS 反向代理 / Cloudflare Tunnel>
-备份位置：<填写>
-
-先阅读 README.md、deploy/rss-stack/README.md、docs/credentials.md、
-NOTICE.md 和 docs/agent-deploy.md，按完整 prompt 的步骤执行。
-检查目标主机、已有数据、Docker/Compose、端口、磁盘、内存和架构；
-据此选择模块、构建镜像、生成配置、初始化订阅、配置翻译并验证。
-由我在本机私有文件或服务界面填入真实凭据；不要把凭据打印到对话或日志。
-在我授权的目标和范围内完成部署，缺少信息时集中询问，并先完成不依赖它的准备。
-完成后列出实际验证结果、服务入口、数据与凭据位置、备份方法和未完成项。
-```
 
 ## 验证与适用范围
 

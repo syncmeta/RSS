@@ -1,8 +1,10 @@
-# 自建 RSS 软件
+# 部署指南
 
 Docker Compose 组合 RSSHub、RSSBox、Redis、Nginx 与抓取侧车。管理界面默认只监听本机，所有持久化数据保存在 Docker 卷中。以下命令在一台安装了 Docker 和 Compose v2 的 Linux 主机执行；RSSHub 构建需要较多内存，可在另一台同架构机器构建后传送镜像。
 
-开始前可先看 [凭据如何获取与存放](../../docs/credentials.md)；交给 Agent 执行时使用 [部署 prompt](../../docs/agent-deploy.md)。
+凭据的获取方式、变量格式与存放位置见 [凭据配置说明](../../docs/credentials.md)。
+
+部署前确认目标机器的系统、CPU 架构、Docker/Compose 版本、可用内存、磁盘和端口。已有容器、数据库或命名卷时先备份，再确定复用或迁移方式；Compose 项目名会影响卷名。按需要选择来源、翻译和邮件模块，具体实现与参数以本仓库代码及各服务当前的上游文档为准。
 
 ## 1. 构建带自写路由的 RSSHub
 
@@ -39,12 +41,12 @@ docker compose up -d
 
 ## 3. 加入参考订阅
 
-[根目录 OPML](../../feeds.opml) 与 [清单](../../subscriptions.md) 可供 RSSBox 或阅读器参考。先把 `YOUR-RSSHUB-HOST`、`YOUR-FEED-HOST`、`YOUR-NEWSLETTER-WORKER`、密钥等占位符替换为自己的值。官方 RSS 不依赖自建服务。
+[根目录 OPML](../../feeds.opml) 与 [清单](../../subscriptions.md) 可供 RSSBox 或阅读器参考。先复制为私有的 `feeds.private.opml`，把需要的条目中的 `YOUR-RSSHUB-HOST`、`YOUR-FEED-HOST`、`YOUR-NEWSLETTER-WORKER`、密钥等占位符替换为自己的值。官方 RSS 不依赖自建服务，同一来源的不同方案按需选择，不必重复订阅。
 
 可在管理界面手工加入，或将替换好的 OPML 导入 RSSBox：
 
 ```sh
-docker compose cp ../../feeds.opml rssbox:/tmp/feeds.opml
+docker compose cp ../../feeds.private.opml rssbox:/tmp/feeds.opml
 # 预览；仍含占位符的条目会跳过。
 docker compose exec -T rssbox python manage.py shell < import_opml.py
 # 确认自己的 OPML 后写入；相同源地址不会重复创建。
@@ -81,3 +83,11 @@ runtime overlay 把 Tunnel 与 RSSBox 后台隔离，Tunnel 网络中的 `rssbox
 RSSBox 补丁目录包含 `.orig` 上游原件以便比对。上游镜像变化时可能需要调整补丁；本库不自动修改正在运行的服务。
 
 批量工具必须显式选自己的对象：Anthropic 的 `translate_content.py` 使用 `RSS_TRANSLATE_FEED_IDS`（逗号分隔）；`probe_translation_fallback.py` 使用 `RSS_PROBE_AGENT_ID`；The Diff 的回填及翻译脚本要求自己的 `--feed-id`，翻译另需 `--agent-id`、`--container`。先备份和查看参数，再在自己的环境使用。
+
+## 部署验证
+
+启动后检查容器状态和健康检查，分别验证管理入口、RSSHub 路由、官方源和所选侧车输出。阅读入口应能返回 `/rss/*`、`/ext/*`，其余后台路径由代理拒绝。开启翻译时先用短文验证模型接口，再检查一篇带图片的文章，核对正文完整性、图片和阅读器中的显示。邮件模块单独验证收信与带令牌的 Feed 输出。
+
+仓库测试、配置解析和镜像构建分别验证不同环节；外部来源、会员全文、模型调用和实际容器运行需在部署环境中验证。缺少账号或未启用的模块记录为待配置，未实际运行的检查记录为未验证。
+
+部署完成后记录服务入口、管理方式、启用模块、配置和数据位置、备份方式及尚未完成的项目。备份恢复先在副本或空环境中验证；迁移时先停止旧实例写入并隔离旧 Tunnel，再切换服务入口。
