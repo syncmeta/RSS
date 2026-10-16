@@ -69,9 +69,6 @@ def main():
         for feed in feeds:
             start = time.monotonic()
             previous_fallback = os.environ.get("TRANSLATION_FALLBACK_OPENAI_AGENT_ID")
-            if feed.pk == 26:
-                # The Diff must actually use its paid GPT-6 Luna agent.
-                os.environ["TRANSLATION_FALLBACK_OPENAI_AGENT_ID"] = ""
             try:
                 result = update_single_feed(feed)
                 feed.refresh_from_db()

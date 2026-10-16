@@ -2,6 +2,8 @@
 
 Docker Compose 组合 RSSHub、RSSBox、Redis、Nginx 与抓取侧车。管理界面默认只监听本机，所有持久化数据保存在 Docker 卷中。以下命令在一台安装了 Docker 和 Compose v2 的 Linux 主机执行；RSSHub 构建需要较多内存，可在另一台同架构机器构建后传送镜像。
 
+开始前可先看 [凭据如何获取与存放](../../docs/credentials.md)；交给 Agent 执行时使用 [部署 prompt](../../docs/agent-deploy.md)。
+
 ## 1. 构建带自写路由的 RSSHub
 
 在仓库根目录执行：
