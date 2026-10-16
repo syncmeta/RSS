@@ -1,1 +1,47 @@
+# ── 凭据：任何情况下都不进版本库 ────────────────────────────
+.env
+.env.*
+!.env.example
+*.env
+admin-password
+.wrangler/
+**/.wrangler/
+backups/
+chatgpt-plan-private/
+*.tar.gz
+
+# 只提交根目录脱敏参考清单；私人订阅导出不入库
+/feeds.private.opml
+Reeder*.opml
+Reeder*.bak
+
+# ── 体积 ──────────────────────────────────────────────
+node_modules/
+**/node_modules/
+dist/
+dist-worker/
+rsshub/
 .DS_Store
+**/.DS_Store
+
+# 私人恢复输入
+deploy/rss-stack/from-209/
+*.local.bak.*
+
+# 运行数据与凭据只进入私有备份，不进入代码仓库
+__pycache__/
+*.py[cod]
+*.sqlite3
+*.sqlite3-*
+*.sqlite
+*.db
+*.db-*
+*.tar
+*.zip
+*.log
+*.private.json
+
+.dev.vars
+.env.local
+.rsshub-build/
+.venv/

@@ -1,0 +1,15 @@
+services:
+  anthropic-sections:
+    image: python:3.12-alpine
+    restart: unless-stopped
+    environment:
+      OUT_DIR: /srv/ext
+      INTERVAL: "900"
+    volumes:
+      - ext-feeds:/srv/ext
+      - ./anthropic-sections/proxy.py:/app/proxy.py:ro
+      - ./public-proxies/proxy.py:/app/public-proxies.py:ro
+    command: ["python", "/app/proxy.py"]
+
+volumes:
+  ext-feeds:

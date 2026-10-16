@@ -1,0 +1,14 @@
+{
+  "name": "newsletter-rss",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-06-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // KV store that holds each newsletter issue as a full-text item.
+  // Replace "id" with the value printed by:  wrangler kv namespace create ITEMS
+  "kv_namespaces": [
+    { "binding": "ITEMS", "id": "REPLACE_WITH_YOUR_KV_NAMESPACE_ID" }
+  ],
+
+  "observability": { "enabled": true }
+}

@@ -1,0 +1,17 @@
+services:
+  feed-proxy:
+    networks:
+      default: {}
+      rss-public:
+        aliases: [rssbox]
+  rsshub:
+    networks:
+      default: {}
+      rss-public: {}
+  cloudflared:
+    networks: [rss-public]
+    depends_on:
+      feed-proxy:
+        condition: service_started
+networks:
+  rss-public: {}

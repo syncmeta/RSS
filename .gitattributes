@@ -1,0 +1,3 @@
+# Preserve upstream originals and unified-diff context verbatim.
+*.orig -whitespace
+*.patch -whitespace

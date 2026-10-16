@@ -1,0 +1,28 @@
+services:
+  chatgpt-plan:
+    build:
+      context: ./chatgpt-plan
+    restart: unless-stopped
+    environment:
+      RSS_PLAN_BRIDGE_KEY: ${RSS_PLAN_BRIDGE_KEY:?Set a private adapter key}
+    volumes:
+      - ./chatgpt-plan-private:/data
+      - ./chatgpt_plan.py:/app/chatgpt_plan.py:ro
+    # Only RSS containers on the Compose network can access this service.
+    # No host/public port is published.
+    mem_limit: 160m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8010/healthz', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  rssbox:
+    environment:
+      RSS_PLAN_BRIDGE_KEY: ${RSS_PLAN_BRIDGE_KEY:?Set a private adapter key}
+      # Plan quota errors remain queued; do not incur API/provider charges.
+      TRANSLATION_FALLBACK_OPENAI_AGENT_ID: ""

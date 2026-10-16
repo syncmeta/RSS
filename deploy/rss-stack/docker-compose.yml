@@ -1,0 +1,184 @@
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  rssbox:
+    networks:
+      default:
+        aliases: [rssbox-backend]
+    image: versun/rssbox:latest
+    restart: unless-stopped
+    logging: *default-logging
+    environment:
+      SITE_URL: ${RSSBOX_SITE_URL}
+      CSRF_TRUSTED_ORIGINS: ${RSSBOX_SITE_URL}
+      SECRET_KEY: ${RSSBOX_SECRET_KEY}
+      REDIS_URL: redis://redis:6379/0
+      DEFAULT_TARGET_LANGUAGE: Chinese Simplified
+      PORT: "8000"
+      DEBUG: "0"
+      DEMO: "0"
+      USER_MANAGEMENT: "1"
+      OPENAI_API_TIMEOUT: "300"
+      OPENAI_API_MAX_RETRIES: "0"
+      # Optional: explicitly select a fallback agent created in your own database.
+      TRANSLATION_FALLBACK_OPENAI_AGENT_ID: "${TRANSLATION_FALLBACK_OPENAI_AGENT_ID:-}"
+      # Manually vetted non-China model-author namespaces. The catalog is
+      # refreshed every 6h and only zero-price, text, unmoderated, long-output
+      # models enter OpenRouter's ordered model-fallback list.
+      OPENROUTER_ALLOWED_MODEL_AUTHORS: "nvidia,google,meta-llama,mistralai,cohere,openai,ibm-granite,arcee-ai,poolside"
+      OPENROUTER_FREE_DENY_TERMS: "content-safety,guard,moderation,embed,rerank,audio,music,coder,code"
+      OPENROUTER_FREE_MIN_CONTEXT_TOKENS: "65536"
+      OPENROUTER_FREE_MIN_COMPLETION_TOKENS: "65536"
+      OPENROUTER_FREE_MODEL_MAX_FALLBACKS: "3"
+      OPENROUTER_FREE_MODEL_CACHE_SECONDS: "21600"
+      OPENROUTER_FREE_REQUIRE_UNMODERATED: "1"
+      LOG_LEVEL: ERROR
+      default_max_posts: "20"
+    volumes:
+      - rssbox-data:/app/data
+      # RSSBox patches:
+      #  fetch_feeds.py 关掉 feedparser 的 HTML 清洗（Sinocism 正文被削 28~50%）
+      #                 + 修上游三个抓取 bug（status 裸访问 / None etag / 零条目静默失效）
+      #  agent.py       不完整/分类/漏图输出进入备用翻译，不保存半篇
+      - ./rssbox-patches/fetch_feeds.py:/app/core/tasks/fetch_feeds.py:ro
+      - ./rssbox-patches/agent.py:/app/core/models/agent.py:ro
+      - ./rssbox-patches/translation_integrity.py:/app/utils/translation_integrity.py:ro
+      #  translate_feeds.py 翻译成功后把 translation_status 置回 True
+      #                 （上游把这行注释掉了，导致译好的 feed 一直输出空）
+      - ./rssbox-patches/translate_feeds.py:/app/core/tasks/translate_feeds.py:ro
+      - ./rssbox-patches/serial_feed_updater.py:/app/serial_feed_updater.py:ro
+      - ./rssbox-patches/rt_cron:/etc/cron.d/rt_cron:ro
+    ports:
+      - "127.0.0.1:8001:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import redis,os; redis.Redis.from_url(os.environ['REDIS_URL']).ping()"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  feed-proxy:
+    image: nginx:alpine
+    restart: unless-stopped
+    logging: *default-logging
+    ports:
+      - "127.0.0.1:8000:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ext-feeds:/srv/ext:ro
+    depends_on:
+      rssbox:
+        condition: service_healthy
+
+  rsshub:
+    image: rsshub-custom:local
+    restart: unless-stopped
+    logging: *default-logging
+    environment:
+      NODE_ENV: production
+      CACHE_TYPE: redis
+      REDIS_URL: redis://redis:6379/
+      ACCESS_KEY: ${RSSHUB_ACCESS_KEY}
+      NODE_EXTRA_CA_CERTS: /etc/rsshub-certs/isrg-root-yr.pem
+      CAIXIN_COOKIE: ${CAIXIN_COOKIE}
+      NYT_S_COOKIE: ${NYT_S_COOKIE}
+      TWITTER_AUTH_TOKEN: ${TWITTER_AUTH_TOKEN}
+      INITIUM_MEMBER_COOKIE: ${INITIUM_MEMBER_COOKIE}
+    volumes:
+      - ./certs-isrg-root-yr.pem:/etc/rsshub-certs/isrg-root-yr.pem:ro
+    ports:
+      - "127.0.0.1:1200:1200"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f \"http://localhost:1200/healthz?key=$$ACCESS_KEY\""]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    logging: *default-logging
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    # Optional tunnel; configure your own token and hostname routing first.
+    profiles: ["tunnel"]
+    restart: unless-stopped
+    logging: *default-logging
+    command: ["tunnel", "--no-autoupdate", "run", "--token", "${TUNNEL_TOKEN}"]
+    depends_on:
+      - feed-proxy
+      - rsshub
+
+  # linux.do 等源在 Cloudflare 后面按 TLS 指纹拦截：curl 放行，node/python 一律 403。
+  # 定时 curl 落盘，由 feed-proxy 以静态文件伺服，rssbox 去读它。
+  ext-fetch:
+    image: alpine:3.19
+    restart: unless-stopped
+    logging: *default-logging
+    volumes:
+      - ext-feeds:/srv/ext
+    command:
+      - sh
+      - -c
+      - |
+        apk add --no-cache curl >/dev/null 2>&1 || true
+        while :; do
+          if curl -sSf -m 60 -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+               -o /srv/ext/linuxdo.rss.tmp "https://linux.do/c/news/34.rss"; then
+            mv /srv/ext/linuxdo.rss.tmp /srv/ext/linuxdo.rss
+            echo "$$(date -Iseconds) linuxdo ok $$(wc -c < /srv/ext/linuxdo.rss) bytes"
+          else
+            echo "$$(date -Iseconds) linuxdo FAILED"
+          fi
+          if curl -sSfL -m 60 -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+               -o /srv/ext/.laurashin-timeline.html.tmp "https://syndication.twitter.com/srv/timeline-profile/screen-name/laurashin"; then
+            mv /srv/ext/.laurashin-timeline.html.tmp /srv/ext/.laurashin-timeline.html
+            echo "$$(date -Iseconds) laurashin ok $$(wc -c < /srv/ext/.laurashin-timeline.html) bytes"
+          else
+            echo "$$(date -Iseconds) laurashin FAILED"
+          fi
+          sleep 900
+        done
+
+  # Sinocism 付费全文：公开 feed 只给预览（切点从 1000 字到 33000 字不等，
+  # 判据是正文结尾那个 Read more 链接，不是长度），带 connect.sid 抓才是全文。
+  # 跑一次就退出、由外层 sleep 循环驱动：峰值内存只在抓取那几秒占用，不常驻。
+  sinocism-proxy:
+    image: python:3.12-alpine
+    restart: unless-stopped
+    logging: *default-logging
+    environment:
+      SINOCISM_COOKIE: ${SINOCISM_COOKIE}
+      OUT: /srv/ext/sinocism.xml
+      CACHE: /srv/ext/.sinocism-cache.json
+      INTERVAL: "0"
+    volumes:
+      - ext-feeds:/srv/ext
+      - ./sinocism-proxy/proxy.py:/app/proxy.py:ro
+      - ./public-proxies/proxy.py:/app/public-proxies.py:ro
+      - ./claude-blog/proxy.py:/app/claude-blog.py:ro
+    command: ["sh", "-c", "while :; do python /app/proxy.py || true; python /app/public-proxies.py || true; python /app/claude-blog.py || true; sleep 900; done"]
+
+volumes:
+  ext-feeds:
+  rssbox-data:
+  redis-data:

@@ -1,0 +1,6 @@
+# Exact public RSSHub client constant, verified against upstream commit
+# bc785f8157fbec6e6f9ec18ff76be7e6477511b7 on 2026-10-16.
+# SHA256: 29f7869c2ac9904741419191033e914d1b75e1779850b8a2233755a0e3a14e98
+# These are line-specific findings; no directory or rule is globally excluded.
+deploy/rsshub-custom-routes/caixin/utils-fulltext.ts:private-key:11
+deploy/rsshub-custom-routes/fork-vs-upstream.patch:private-key:187

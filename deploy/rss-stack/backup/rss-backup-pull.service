@@ -1,0 +1,12 @@
+[Unit]
+Description=Verified off-host backup of your RSS stack
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /usr/local/lib/rss-backup/pull.py --host root@rss.example.com --root /srv/rss-backups/rss --identity /root/.ssh/rss-backup --known-hosts /root/.ssh/rss-backup-known-hosts --restricted
+Nice=15
+IOSchedulingClass=idle
+UMask=0077
+TimeoutStartSec=2h

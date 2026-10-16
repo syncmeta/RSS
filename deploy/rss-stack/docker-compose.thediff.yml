@@ -1,0 +1,17 @@
+services:
+  thediff-proxy:
+    image: python:3.12-alpine
+    restart: unless-stopped
+    environment:
+      THEDIFF_COOKIE: ${THEDIFF_COOKIE:-}
+      THEDIFF_COOKIE_SIG: ${THEDIFF_COOKIE_SIG:-}
+      OUT: /srv/ext/thediff.xml
+      CACHE: /srv/ext/.thediff-cache.json
+      INTERVAL: "900"
+    volumes:
+      - ext-feeds:/srv/ext
+      - ./thediff-proxy/proxy.py:/app/proxy.py:ro
+    command: ["python", "/app/proxy.py"]
+
+volumes:
+  ext-feeds:

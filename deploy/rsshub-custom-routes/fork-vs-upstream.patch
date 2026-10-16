@@ -1,0 +1,231 @@
+diff --git a/lib/routes/anthropic/research.ts b/lib/routes/anthropic/research.ts
+index 9a7baa3..d70355c 100644
+--- a/lib/routes/anthropic/research.ts
++++ b/lib/routes/anthropic/research.ts
+@@ -3,6 +3,7 @@ import pMap from 'p-map';
+ 
+ import type { Route } from '@/types';
+ import cache from '@/utils/cache';
++import logger from '@/utils/logger';
+ import ofetch from '@/utils/ofetch';
+ import { parseDate } from '@/utils/parse-date';
+ 
+@@ -22,8 +23,9 @@ export const route: Route = {
+     url: 'www.anthropic.com/research',
+ };
+ 
+-async function handler() {
++async function handler(ctx) {
+     const link = 'https://www.anthropic.com/research';
++    const limit = ctx.req.query('limit') ? Number(ctx.req.query('limit')) : 20;
+     const response = await ofetch(link);
+     const $ = load(response);
+ 
+@@ -68,41 +70,56 @@ async function handler() {
+ 
+     const sections = fd.flatMap((d) => (Array.isArray(d.data) ? d.data : [])).flatMap((item) => item?.page?.sections ?? []);
+     const publicationSections = sections.filter((section) => section?.title === 'Publications');
++    // The Publications section lists the whole back catalogue (~60 posts). Only
++    // the newest `limit` are worth pulling full text for — fetching all of them
++    // on every cache expiry is what gets us rate-limited by anthropic.com.
+     const posts = publicationSections
+         .flatMap((section) => section?.posts ?? [])
+         .map((post) => ({
+             title: post.title,
+             link: `https://www.anthropic.com/research/${post.slug.current}`,
+             pubDate: parseDate(post.publishedOn),
+-        }));
++        }))
++        .toSorted((a, b) => Number(b.pubDate) - Number(a.pubDate))
++        .slice(0, limit);
+ 
+     const items = await pMap(
+         posts,
+-        (item) =>
+-            cache.tryGet(item.link, async () => {
+-                const response = await ofetch(item.link);
+-                const $ = load(response);
++        async (item) => {
++            try {
++                return await cache.tryGet(item.link, async () => {
++                    const response = await ofetch(item.link);
++                    const $ = load(response);
+ 
+-                const content = $('#main-content > article');
+-                content
+-                    .find('[class$="__header"], [class$="__sidebar-container"], [class$="__controls"], [class$="__socialShare"], [class^="LandingPageSection-module-scss-module__"], [class^="SubjectNewsletter-module-scss-module__"]')
+-                    .remove();
+-                content.find('img').each((_, e) => {
+-                    const $e = $(e);
+-                    $e.removeAttr('style srcset');
+-                    const src = $e.attr('src');
+-                    const params = new URLSearchParams(src);
+-                    const newSrc = params.get('/_next/image?url');
+-                    if (newSrc) {
+-                        $e.attr('src', newSrc);
+-                    }
+-                });
++                    const content = $('#main-content > article');
++                    content
++                        .find(
++                            '[class$="__header"], [class$="__sidebar-container"], [class$="__controls"], [class$="__socialShare"], [class^="LandingPageSection-module-scss-module__"], [class^="SubjectNewsletter-module-scss-module__"]'
++                        )
++                        .remove();
++                    content.find('img').each((_, e) => {
++                        const $e = $(e);
++                        $e.removeAttr('style srcset');
++                        const src = $e.attr('src');
++                        const params = new URLSearchParams(src);
++                        const newSrc = params.get('/_next/image?url');
++                        if (newSrc) {
++                            $e.attr('src', newSrc);
++                        }
++                    });
+ 
+-                item.description = content.html();
++                    item.description = content.html();
+ 
++                    return item;
++                });
++            } catch (error) {
++                // A single article that 429s or times out must not take the
++                // whole feed down with it — fall back to a headline-only item.
++                logger.warn(`Failed to fetch full text for ${item.link}: ${error}`);
+                 return item;
+-            }),
+-        { concurrency: 5 }
++            }
++        },
++        { concurrency: 2 }
+     );
+ 
+     return {
+diff --git a/lib/routes/caixin/article.ts b/lib/routes/caixin/article.ts
+index 522d1f5..16475c9 100644
+--- a/lib/routes/caixin/article.ts
++++ b/lib/routes/caixin/article.ts
+@@ -4,12 +4,14 @@ import got from '@/utils/got';
+ import { parseDate } from '@/utils/parse-date';
+ 
+ import { parseArticle } from './utils';
++import { getFulltext } from './utils-fulltext';
+ 
+ export const route: Route = {
+     path: '/article',
+     categories: ['traditional-media'],
+     example: '/caixin/article',
+     parameters: {},
++    description: '订阅用户配置 `CAIXIN_COOKIE` 后，可在 url 传入 `?fulltext=true` 解锁正文全文。',
+     features: {
+         requireConfig: false,
+         requirePuppeteer: false,
+@@ -29,7 +31,7 @@ export const route: Route = {
+     url: 'caixin.com/',
+ };
+ 
+-async function handler() {
++async function handler(ctx) {
+     const { data: response } = await got('https://mapiv5.caixin.com/m/api/getWapIndexListByPage');
+ 
+     const list = response.data.list.map((item) => ({
+@@ -43,7 +45,22 @@ async function handler() {
+         audio_image_url: item.audio_image_url,
+     }));
+ 
+-    const items = await Promise.all(list.map((item) => cache.tryGet(item.link, () => parseArticle(item))));
++    const fulltext = ctx.req.query('fulltext') === 'true';
++    const items = await Promise.all(
++        list.map((item) =>
++            // prefix the cache key so the full-text and preview variants don't collide
++            cache.tryGet(`caixin:article:${fulltext ? 'full:' : ''}${item.link}`, async () => {
++                const parsed = await parseArticle(item);
++                if (fulltext) {
++                    const authorizedFullText = await getFulltext(item.link);
++                    if (authorizedFullText) {
++                        parsed.description = authorizedFullText;
++                    }
++                }
++                return parsed;
++            })
++        )
++    );
+ 
+     return {
+         title: '财新网 - 首页',
+diff --git a/lib/routes/caixin/latest.ts b/lib/routes/caixin/latest.ts
+index 933dca0..1532e41 100644
+--- a/lib/routes/caixin/latest.ts
++++ b/lib/routes/caixin/latest.ts
+@@ -44,15 +44,18 @@ async function handler(ctx) {
+         }))
+         .filter((item) => !item.link.startsWith('https://fm.caixin.com/') && !item.link.startsWith('https://video.caixin.com/') && !item.link.startsWith('https://datanews.caixin.com/')); // content filter
+ 
++    const fulltext = ctx.req.query('fulltext') === 'true';
+     const rss = await Promise.all(
+         list.map((item) =>
+-            cache.tryGet(`caixin:latest:${item.link}`, async () => {
++            // prefix the cache key so the full-text and preview variants don't collide
++            cache.tryGet(`caixin:latest:${fulltext ? 'full:' : ''}${item.link}`, async () => {
+                 // desc
+                 const desc = await parseArticle(item);
+ 
+-                if (ctx.req.query('fulltext') === 'true') {
++                if (fulltext) {
+                     const authorizedFullText = await getFulltext(item.link);
+-                    item.description = authorizedFullText === '' ? desc.description : authorizedFullText;
++                    // getFulltext returns undefined (no cookie / not entitled) or '' — fall back to the preview
++                    item.description = authorizedFullText || desc.description;
+                 } else {
+                     item.description = desc.description;
+                 }
+diff --git a/lib/routes/caixin/utils-fulltext.ts b/lib/routes/caixin/utils-fulltext.ts
+index af5b027..f92c691 100644
+--- a/lib/routes/caixin/utils-fulltext.ts
++++ b/lib/routes/caixin/utils-fulltext.ts
+@@ -10,7 +10,27 @@ import ofetch from '@/utils/ofetch';
+ const rsaPrivateKey =
+     '-----BEGIN PRIVATE KEY-----MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCLci8q2u3NGFyFlMUwjCP91PsvGjHdRAq9fmqZLxvue+n+RhzNxnKKYOv35pLgFKWXsGq2TV+5Xrv6xZgNx36IUkqbmrO+eCa8NFmti04wvMfG3DCNdKA7Lue880daNiK3BOhlQlZPykUXt1NftMNS/z+e70W+Vpv1ZxCx5BipqZkdoceM3uin0vUQmqmHqjxi5qKUuov90dXLaMxypCA0TDsIDnX8RPvPtqKff1p2TMW2a0XYe7CPYhRggaQMpmo0TcFutgrM1Vywyr2TPxYR+H/tpuuWRET7tUIQykBYoO1WKfL2dX6cxarjAJfnYnod3sMzppHouyp8Pt7gHVG7AgMBAAECggEAEFshSy6IrADKgWSUyH/3jMNZfwnchW6Ar/9O847CAPQJ2yhQIpa/Qpnhs58Y5S2myqcHrUBgFPcWp3BbyGn43naAh8XahWHEcVjWl/N6BV9vM1UKYN0oGikDR3dljCBDbCIoPBBO3WcFOaXoIpaqPmbwCG1aSdwQyPUA0UzG08eDbuHK6L5jvbe3xv5kLpWTVddrocW+SakbZRAX1Ykp7IujOce235nM7GOfoq4b8jmK5CLg6VIZGQV20wnn9YxuFOndRSjneFberzfzBMhVLpPsQ16M2xDLpZaDTggZnq2L6nZygds8Hda++ga3WbD3TcgjJNYuENu1S88IowYhSQKBgQDFqRA+38mo6KsxVDCNWcuEk2hSq8NEUzRHJpS7/QjZmEIYpFzDXgSGwhZJ0WNsQtaxJeBbc7B/OOqh8TL1reLl5AdTimS1OLHWVf/MUsLVS7Y82hx/hpYWxZnRSq41oI3P8FO/53FiQMYo2wbwqF6uQjB1y8h58aqL3OYpTH/5xQKBgQC0mobALJ+bU4nCPzkVDZuD6RyNWPwS1aE3+925wDSN2rJ0iLIb4N5czWZmHb66VlAtfGbp2q+amsCV4r6UR19A/y8k9SFB0mdtxix6mjEfaGhVJm4B1mkvsn0OHMAanKkohUvCjROQc3sziyp2gqSEQ98G7//VMPx/3dhgyQpVfwKBgQCycsqu6N0n+D6t/0MCKiJaI7bYhCd7JN8aqVM4UN5PjG2Hz8PLwbK2cr0qkbaAA+vN7NMb3Vtn0FvMLnUCZqVlRTP0EQqQrYmoZuXUcpdhd8QkNgnqe/g+wND4qcKTucquA1uo8mtj9/Su5+bhGDC6hBk6D+uDZFHDiX/loyIavQKBgQCXF6AcLjjpDZ52b8Yloti0JtXIOuXILAlQeNoqiG5vLsOVUrcPM7VUFlLQo5no8kTpiOXgRyAaS9VKkAO4sW0zR0n9tUY5dvkokV6sw0rNZ9/BPQFTcDlXug99OvhMSzwJtlqHTNdNRg+QM6E2vF0+ejmf6DEz/mN/5e0cK5UFqQKBgCR2hVfbRtDz9Cm/P8chPqaWFkH5ulUxBpc704Igc6bVH5DrEoWo6akbeJixV2obAZO3sFyeJqBUqaCvqG17Xei6jn3Hc3WMz9nLrAJEI9BTCfwvuxCOyY0IxqAAYT28xYv42I4+ADT/PpCq2Dj5u43X0dapAjZBZDfVVis7q1Bw-----END PRIVATE KEY-----';
+ 
+-export async function getFulltext(url: string) {
++// Caixin's checkAuth endpoint rejects concurrent requests with 400/401, so routes that fan out
++// with Promise.all get most articles rate-limited and silently fall back to the public preview.
++// Serialise every getFulltext call through a shared queue (with a small gap) to stay under the limit.
++let queue: Promise<unknown> = Promise.resolve();
++
++export function getFulltext(url: string): Promise<string | undefined> {
++    // getFulltext must synchronously enqueue and return so that concurrent callers chain onto the
++    // same queue and run one at a time; that requires `.then()` here rather than `await` (awaiting
++    // would let every caller read the same `queue` before updating it and defeat the serialisation).
++    // oxlint-disable-next-line unicorn-js/prefer-await
++    const task = queue.then(() => fetchFulltext(url));
++    // keep the chain alive regardless of success/failure, then pause briefly before the next call
++    // oxlint-disable-next-line unicorn-js/prefer-await
++    queue = task.then(
++        () => new Promise((r) => setTimeout(r, 200)),
++        () => new Promise((r) => setTimeout(r, 200))
++    );
++    return task;
++}
++
++async function fetchFulltext(url: string) {
+     if (!config.caixin.cookie) {
+         return;
+     }
+@@ -48,6 +68,16 @@ export async function getFulltext(url: string) {
+         },
+     });
+ 
+-    const { content = '', pictureList } = JSON.parse(res.data.match(/resetContentInfo\((.*)\)/)[1]);
++    // Response shape: {"code":0,"data":"resetContentInfo({...})"} — the paid HTML lives in the
++    // JSONP wrapper inside the outer `data` string. ofetch may return the parsed object or the
++    // raw text depending on content-type handling, so normalise both before extracting.
++    const outer = typeof res === 'string' ? JSON.parse(res) : res;
++    const jsonpMatch = outer.data?.match(/resetContentInfo\((.*)\)/);
++    if (!jsonpMatch) {
++        // no paid payload (cookie expired, article not entitled, or unexpected shape) — return
++        // nothing so the caller keeps the public preview instead of failing the whole feed
++        return;
++    }
++    const { content = '', pictureList } = JSON.parse(jsonpMatch[1]);
+     return content + (pictureList ? pictureList.map((e) => `<img src="${e.url}" id="picture_${e.id}" alt="${e.desc}"><dl><dt>${e.desc}</dt></dl>`).join('') : '');
+ }

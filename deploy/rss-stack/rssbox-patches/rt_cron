@@ -1,0 +1,9 @@
+# All feed frequencies share one kernel lock. Stagger their start minutes so
+# an empty short-interval job cannot win the lock over the hourly feed pass.
+1-56/5 * * * * root cd /app && /opt/venv/bin/python serial_feed_updater.py --frequency 5 >> /var/log/cron.log 2>&1
+2-59/15 * * * * root cd /app && /opt/venv/bin/python serial_feed_updater.py --frequency 15 >> /var/log/cron.log 2>&1
+3,33 * * * * root cd /app && /opt/venv/bin/python serial_feed_updater.py --frequency 30 >> /var/log/cron.log 2>&1
+0 * * * * root cd /app && timeout --signal=TERM 45m /opt/venv/bin/python serial_feed_updater.py --frequency 60 >> /var/log/cron.log 2>&1
+4 1 * * * root cd /app && /opt/venv/bin/python serial_feed_updater.py --frequency 1440 >> /var/log/cron.log 2>&1
+5 2 * * 1 root cd /app && /opt/venv/bin/python serial_feed_updater.py --frequency 10080 >> /var/log/cron.log 2>&1
+# Historical entries are retained. No weekly deletion job is enabled.
